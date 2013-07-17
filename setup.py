@@ -11,6 +11,6 @@ setup(
     author_email='ahmed.elsayed@areva.com',
     packages=['pywatprop'],
     license='LICENSE.txt',
-    description='Steam / Water Property Lookup Functions',
+    description='Steam / Water Property Functions',
     long_description=open('README.rst').read()
 	)

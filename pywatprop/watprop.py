@@ -11,7 +11,7 @@ class propack:
         return retstr
 
 class ActiveProps:
-    """ Used internally to keep up with properties to calc/show """
+    """ Used internally to keep up with properties for calc/show """
     def __init__(self):
         self.b_h = True
         self.b_rho = True
