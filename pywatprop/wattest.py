@@ -4,44 +4,91 @@ import numpy as np
 
 W = watprop()
 
-def test_phT() :
-	W.phT(100.,200.)
-	W.phT([34,np.nan],[100,200])
-	W.phT("bad", np.nan) # error
-	W.phT("","") # error
 
-def test_pTh() :
-	W.pTh(100.,200.)
-	W.pTh([34,np.nan],[100,200])
-	W.pTh("bad", np.nan) # error
-	W.pTh("","") # error
+def test_pT() :
+	W.pT(100.,200.).h
+	W.pT([34,np.nan],[100,200]).h
+	W.pT(33, np.nan).h 
+	W.pT(1.0,0.0).h 
+	W.pT(100.,200.).u
+	W.pT([34,np.nan],[100,200]).u
+	W.pT(33, np.nan).u 
+	W.pT(0,0).u 
+	W.pT(100.,200.).x
+	W.pT([34,np.nan],[100,200]).x
+	W.pT(00.0, np.nan).x 
+	W.pT(1,4).x
+	W.pT(100.,200.).rho
+	W.pT([34,np.nan],[100,200]).rho
+	W.pT(00.0, np.nan).rho
+	W.pT(1,4).rho 
+	W.pT(100.,200.).s
+	W.pT([34,np.nan],[100,200]).s
+	W.pT(00.0, np.nan).s
+	W.pT(1,4).s
 
-def test_pTrho() :
-	W.pTrho(100.,200.)
-	W.pTrho([34,np.nan],[100,200])
-	W.pTrho("bad", np.nan) # error
-	W.pTrho("","") # error
+def test_px() :
+	W.px(100.).h
+	W.px([34,np.nan],[100,200]).h
+	W.px(0, np.nan).h 
+	W.px(1,2).h 
+	W.px(100.).rho
+	W.px([34,np.nan],[100,200]).rho
+	W.px(0, np.nan).rho 
+	W.px(1,2).rho 
+	W.px(100.).u
+	W.px([34,np.nan],[100,200]).u
+	W.px(0, np.nan).u
+	W.px(1,2).u
+	W.px(100.).s
+	W.px([34,np.nan],[100,200]).s
+	W.px(0, np.nan).s
+	W.px(1,2).s
 
-def test_pTh() :
-	W.pTh(100.,200.)
-	W.pTh([34,np.nan],[100,200])
-	W.pTh("bad", np.nan) # error
-	W.pTh("","") # error
+def test_Tx() :
+	W.Tx(100.,200.).h
+	W.Tx([np.nan],[1200]).h
+	W.Tx(33/4, np.nan).h
+	W.Tx(1).h
+	W.Tx(100.,200.).u
+	W.Tx([np.nan],[1200]).u
+	W.Tx(33/4, np.nan).u
+	W.Tx(1).u
+	W.Tx(100.,200.).rho
+	W.Tx([np.nan],[1200]).rho
+	W.Tx(33/4, np.nan).rho
+	W.Tx(1).rho
+	W.Tx(100.,200.).mu
+	W.Tx([np.nan],[1200]).mu
+	W.Tx(33/4, np.nan).mu
+	W.Tx(1).mu
+	W.Tx(100.,200.).k
+	W.Tx([np.nan],[1200]).k
+	W.Tx(33/4, np.nan).k
+	W.Tx(1).k
+	W.Tx(100.,200.).cp
+	W.Tx([np.nan],[1200]).cp
+	W.Tx(33/4, np.nan).cp
+	W.Tx(1).cp
+	W.Tx(100.,200.).s
+	W.Tx([np.nan],[1200]).s
+	W.Tx(33/4, np.nan).s
+	W.Tx(1).s
 
-def test_psat_T() :
-	W.psat_T(30)
-	W.psat_T(100.,200.) # error
-	W.psat_T([34,np.nan],[100,200]) # error
-	W.psat_T("bad", np.nan) # error
-	W.psat_T("","") # error
+
+def test_p_Tsat() :
+	W.p_Tsat(100.)
+	W.p_Tsat([np.nan])
+	W.p_Tsat(1.8975/80)
+	W.p_Tsat(1)
+
 	
-def test_Tsat_p() :
-	W.Tsat_p(500)
-	W.Tsat_p(100.,200.) # error
-	W.Tsat_p([34,np.nan],[100,200]) # error
-	W.Tsat_p("bad", np.nan) # error
-	W.Tsat_p("","") # error
-
+def test_T_psat() :
+	W.T_psat(30)
+	W.T_psat(100.)
+	W.T_psat(np.nan)
+	W.T_psat(0/8*5)
+	W.T_psat(0)
 
 
 print __name__
