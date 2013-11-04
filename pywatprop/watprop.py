@@ -51,9 +51,9 @@ class UnitType:
             retstr += "enthalpy: kJ/kg\n"
             retstr += "specific energy: kJ/kg\n"
             retstr += "density: kg/m3\n"
-            retstr += "specific heat: kJ/kg-C\n"
-            retstr += "Thermal conductivity: W/m.C\n"
-            retstr += "Dynamic viscosity: bar.s\n"
+            retstr += "specific heat: kJ/(kg·C)\n"
+            retstr += "Thermal conductivity: W/(m·C)\n"
+            retstr += "Dynamic viscosity: bar·s\n"
         elif self.type == 'SI':
             retstr = "Property Units for SI:\n"
             retstr += "pressure: Pa\n"
@@ -61,9 +61,19 @@ class UnitType:
             retstr += "enthalpy: J/kg\n"
             retstr += "specific energy: J/kg\n"
             retstr += "density: kg/m3\n"
-            retstr += "specific heat: J/kg-K\n"
-            retstr += "Thermal conductivity: W/m.k\n"
-            retstr += "Dynamic viscosity: Pa.s\n"
+            retstr += "specific heat: J/(kg·K)\n"
+            retstr += "Thermal conductivity: W/(m·k)\n"
+            retstr += "Dynamic viscosity: Pa·s\n"
+        elif self.type == 'US':
+            retstr = "Property Units for US:\n"
+            retstr += "pressure: psia\n"
+            retstr += "temperature: F\n"
+            retstr += "enthalpy: Btu/lbm\n"
+            retstr += "specific energy: Btu/lbm\n"
+            retstr += "density: lbm/ft3\n"
+            retstr += "specific heat: Btu/(lbm·F)\n"
+            retstr += "Thermal conductivity: Btu/(hr·ft⋅F)\n"
+            retstr += "Dynamic viscosity: (lb·s)/ft2\n"
         else:
             retstr = "Unit Type Not Recognized\n"
             retstr += "All calculations will be performed for SI units"
@@ -81,6 +91,23 @@ class watprop(object):
     Once initiated the resulting object is used to make calls to obtain
     desired properties.
     """
+
+    def get_SI_TempPress(T,p,unittype):
+        """
+        Helper function to return SI units for Temp and Press Pair
+        """
+        T = np.float(T)
+        p = np.float(p)
+        T_si = T
+        p_si = p
+        if unittype == "altSI":
+            T_si=T+273.15
+            p_si=p*1e5
+        elif unittype == "US":
+            T_si=((T-32.)/1.8) + 273.15
+            p_si=p/14.5037738007*1e5
+        return T_si, p_si
+
     def __init__ (self, unittype ="altSI" , b_h= True ,b_rho=True ,b_cp=True, \
         b_x=True ,b_u=True,b_T=True,b_p=True,b_k=True,b_mu=True):
 
@@ -101,50 +128,46 @@ class watprop(object):
 
         def _pT_h(p,T):
             """ given pressure and Temperature, returns enthalpy """
-            fs_T=np.float(T)
-            fs_p=np.float(p)
-            if self.units.type == "altSI":
-                fs_T=T+273.15
-                fs_p=p*1e5        
+            fs_T,fs_p=get_SI_TempPress(T,p,self.units.type)
+
             fs_val = freesteam.steam_pT(fs_p, fs_T).h
             val=fs_val
             if self.units.type == "altSI":
                 val=fs_val/1000.
+            elif self.units.type == "US":
+                val=fs_val * 0.000429922614
             return val
         
         def _pT_rho(p,T):
             """ given pressure and Temperature, return density """
-            fs_T=np.float(T)
-            fs_p=np.float(p)
-            if self.units.type == "altSI": 
-                fs_T=T+273.15
-                fs_p=p*1e5        
+            fs_T,fs_p=get_SI_TempPress(T,p,self.units.type)
+
             fs_val = freesteam.steam_pT(fs_p, fs_T).rho
             val=fs_val
+            if self.units.type == "US":
+                val=fs_val * 0.06242796 
+
             return val
 
         def _pT_u(p,T):
             """ given pressure and Temperature, return specific energy """
-            fs_T=np.float(T)
-            fs_p=np.float(p)
-            if self.units.type == "altSI": 
-                fs_T=T+273.15
-                fs_p=p*1e5         
+            fs_T,fs_p=get_SI_TempPress(T,p,self.units.type)
+
             fs_val = freesteam.steam_pT(fs_p, fs_T).u
             val=fs_val
             if self.units.type=="altSI":
-                val=fs_val/1000
+                val=fs_val/1000.
+            elif self.units.type=="US":
+                val=fs_val * 0.000429922614
             return val
         
         def _pT_x(p,T):
             """ given pressure and Temperature, return quality """
             if (np.isnan(p) or np.isnan(T)) :
                 return np.nan
-            fs_T=np.float(T)
-            fs_p=np.float(p)
-            if self.units.type == "altSI": 
-                fs_T=T+273.15
-                fs_p=p*1e5         
+
+            fs_T,fs_p=get_SI_TempPress(T,p,self.units.type)
+
             fs_val = freesteam.steam_pT(fs_p, fs_T).x
             val=fs_val
             return val
@@ -154,11 +177,17 @@ class watprop(object):
             fs_p=np.float(p)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_p = p*1E5    
+                fs_p = fs_p*1E5
+            elif self.units.type == "US":
+                fs_p=fs_p/14.5037738007*1e5
+
             fs_val = freesteam.Tsat_p(fs_p)
             val=freesteam.steam_Tx(fs_val,fs_x).h
             if self.units.type=="altSI":
                 val=val/1000
+            elif self.units.type=="US":
+                val = val * 0.000429922614
+
             return val
 
         def _px_u(p,x=0):
@@ -166,11 +195,17 @@ class watprop(object):
             fs_p=np.float(p)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_p = p*1E5        
+                fs_p = fs_p*1E5
+            elif self.units.type == "US":
+                fs_p=fs_p/14.5037738007*1e5
+
             fs_val = freesteam.Tsat_p(fs_p)
             val=freesteam.steam_Tx(fs_val,fs_x).u
             if self.units.type=="altSI":
-                val=val/1000
+                val=val/1000.
+            elif self.units.type=="US":
+                val = val * 0.000429922614
+
             return val
 
         def _px_rho(p,x=0):
@@ -178,9 +213,16 @@ class watprop(object):
             fs_p=np.float(p)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_p = p*1E5       
+                fs_p = fs_p*1E5
+            elif self.units.type == "US":
+                fs_p=fs_p/14.5037738007*1e5
+
             fs_val = freesteam.Tsat_p(fs_p)
             val=freesteam.steam_Tx(fs_val,fs_x).rho
+
+            if self.units.type == "US":
+                val = val * 0.06242796 
+
             return val
         
         def _Tx_h(T,x):
@@ -188,10 +230,16 @@ class watprop(object):
             fs_T=np.float(T)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_T = T+273.15
+                fs_T = fs_T+273.15
+            elif self.units.type == "US":
+                fs_T = ((fs_T-32.)/1.8) + 273.15
+
             val=freesteam.steam_Tx(fs_T,fs_x).h
-            if self.units.type=="altSI":
+            if self.units.type == "altSI":
                 val=val/1000
+            elif self.units.type=="US":
+                val = val * 0.000429922614
+
             return val
 
         def _Tx_u(T,x):
@@ -199,10 +247,16 @@ class watprop(object):
             fs_T=np.float(T)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_T = T+273.15       
+                fs_T = fs_T+273.15
+            elif self.units.type == "US":
+                fs_T = ((fs_T-32.)/1.8) + 273.15
+
             val=freesteam.steam_Tx(fs_T,fs_x).u
             if self.units.type=="altSI":
                 val=val/1000
+            elif self.units.type=="US":
+                val = val * 0.000429922614
+
             return val
 
         def _Tx_rho(T,x):
@@ -210,8 +264,15 @@ class watprop(object):
             fs_T=np.float(T)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_T = T+273.15           
+                fs_T = fs_T+273.15           
+            elif self.units.type == "US":
+                fs_T = ((fs_T-32.)/1.8) + 273.15
+
             val=freesteam.steam_Tx(fs_T,fs_x).rho
+
+            if self.units.type == "US":
+                val = val * 0.06242796 
+
             return val
 
         def _Tx_cp(T,x):
@@ -219,26 +280,48 @@ class watprop(object):
             fs_T=np.float(T)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_T = T+273.15           
+                fs_T = fs_T+273.15           
+            elif self.units.type == "US":
+                fs_T = ((fs_T-32.)/1.8) + 273.15
+
             val=freesteam.steam_Tx(fs_T,fs_x).cp
             if self.units.type=="altSI":
                 val=val/1000
+            elif self.units.type == "US":
+                 val = val / 4186.8
             return val
+
         def _Tx_mu(T,x):
             """ given Temperature and quality, return Dynamic viscosity """
             fs_T=np.float(T)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_T = T+273.15           
+                fs_T = fs_T+273.15
+            elif self.units.type == "US":
+                fs_T = ((fs_T-32.)/1.8) + 273.15
+           
             val=freesteam.steam_Tx(fs_T,fs_x).mu
+
+            if self.units.type=="altSI":
+                val=val/1E5
+            elif self.units.type == "US":
+                 val = val * 0.0209 # to (lbf-s) / ft2
+
             return val
+
         def _Tx_k(T,x):
             """ given Temperature and quality, return Thermal conductivity """
             fs_T=np.float(T)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_T = T+273.15           
+                fs_T = T + 273.15           
+            elif self.units.type == "US":
+                fs_T = ((fs_T-32.)/1.8) + 273.15
+
             val=freesteam.steam_Tx(fs_T,fs_x).k
+
+            if self.units.type == "US":
+                val = val * 0.58  # to Btu/(hr·ft⋅F)
             return val
 
         def _Tx_p(T,x):
@@ -249,10 +332,16 @@ class watprop(object):
             fs_T=np.float(T)
             fs_x=np.float(x)
             if self.units.type == "altSI": 
-                fs_T = T+273.15        
+                fs_T = fs_T+273.15        
+            elif self.units.type == "US":
+                fs_T = ((fs_T-32.)/1.8) + 273.15
+
             val=freesteam.steam_Tx(fs_T,fs_x).p
             if self.units.type=="altSI":
                 val=val/1E5
+            elif self.units.type == "US":
+                val=val / 1e5 * 14.5037738007
+
             return val
 
 
@@ -260,11 +349,17 @@ class watprop(object):
             """ given Temperature, return saturation pressure """
             fs_T=np.float(T)
             if self.units.type == "altSI": 
-                fs_T=T+273.15        
+                fs_T=fs_T+273.15        
+            elif self.units.type == "US":
+                fs_T = ((fs_T-32.)/1.8) + 273.15
+
             fs_val = freesteam.psat_T(fs_T)
             val=fs_val
             if self.units.type=="altSI":
                 val=fs_val/1E5
+            elif self.units.type == "US":
+                val=val / 1e5 * 14.5037738007
+
             return val
        
 
@@ -272,11 +367,17 @@ class watprop(object):
             """ given pressure, return saturation Temperature """
             fs_p=np.float(p)
             if self.units.type == "altSI": 
-                fs_p = p*1E5       
+                fs_p = fs_p*1E5       
+            elif self.units.type == "US":
+                fs_p = fs_p  / 14.5037738007 * 1e5
+
             fs_val = freesteam.Tsat_p(fs_p)
             val=fs_val
             if self.units.type=="altSI":
-                val=fs_val-273.15
+                val=val-273.15
+            elif self.units.type=="US":
+                val = (val - 273.15) * 1.8 + 32.0
+
             return val
 
         # Vectorization of each of the internal functions above
