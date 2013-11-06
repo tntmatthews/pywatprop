@@ -92,7 +92,7 @@ class watprop(object):
     desired properties.
     """
 
-    def get_SI_TempPress(T,p,unittype):
+    def _get_SI_TempPress(self,T,p,unittype):
         """
         Helper function to return SI units for Temp and Press Pair
         """
@@ -128,7 +128,7 @@ class watprop(object):
 
         def _pT_h(p,T):
             """ given pressure and Temperature, returns enthalpy """
-            fs_T,fs_p=get_SI_TempPress(T,p,self.units.type)
+            fs_T,fs_p=self._get_SI_TempPress(T,p,self.units.type)
 
             fs_val = freesteam.steam_pT(fs_p, fs_T).h
             val=fs_val
@@ -140,7 +140,7 @@ class watprop(object):
         
         def _pT_rho(p,T):
             """ given pressure and Temperature, return density """
-            fs_T,fs_p=get_SI_TempPress(T,p,self.units.type)
+            fs_T,fs_p=self._get_SI_TempPress(T,p,self.units.type)
 
             fs_val = freesteam.steam_pT(fs_p, fs_T).rho
             val=fs_val
@@ -151,7 +151,7 @@ class watprop(object):
 
         def _pT_u(p,T):
             """ given pressure and Temperature, return specific energy """
-            fs_T,fs_p=get_SI_TempPress(T,p,self.units.type)
+            fs_T,fs_p=self._get_SI_TempPress(T,p,self.units.type)
 
             fs_val = freesteam.steam_pT(fs_p, fs_T).u
             val=fs_val
@@ -166,7 +166,7 @@ class watprop(object):
             if (np.isnan(p) or np.isnan(T)) :
                 return np.nan
 
-            fs_T,fs_p=get_SI_TempPress(T,p,self.units.type)
+            fs_T,fs_p=self._get_SI_TempPress(T,p,self.units.type)
 
             fs_val = freesteam.steam_pT(fs_p, fs_T).x
             val=fs_val
